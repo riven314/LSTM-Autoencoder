@@ -63,7 +63,7 @@ class Layout:
         return normalized_bboxs
 
     def unnormalize_bboxs(self, normalized_bboxs):
-        bboxs = normalized_bboxs.copy()
+        bboxs = np.clip(normalized_bboxs.copy(), a_min = 0., a_max = 1.)
         bboxs[:, [0, 2]] = bboxs[:, [0, 2]] * self.WIDTH
         bboxs[:, [1, 3]] = bboxs[:, [1, 3]] * self.HEIGHT
         return bboxs 
@@ -89,9 +89,7 @@ class Layout:
 
             child_nodes = json_tree['children']
             for child_node in child_nodes:
-                self._recursive_parse_json_tree(
-                    child_node, is_parse_parent, bboxs = bboxs
-                )
+                self._recursive_parse_json_tree(child_node, is_parse_parent, bboxs = bboxs)
 
         else:
             child_bbox = json_tree['bounds']
@@ -104,6 +102,7 @@ class Layout:
 
     @staticmethod
     def rasterize_bboxs(bboxs, width, height):
+        """ bboxs are un-normalized """
         img = Image.new('RGB', (width, height), (255, 255, 255))
         draw = ImageDraw.Draw(img) 
         for bbox in bboxs:
