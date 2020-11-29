@@ -21,7 +21,7 @@ class LayoutSampler(Dataset):
         all_fns = os.listdir(data_dir)
         self.json_fns = sorted([fn for fn in all_fns if fn.endswith('.json')])
         self.png_fns = sorted([fn for fn in all_fns if fn.endswith('.png')])
-
+        
         assert len(self.json_fns) == len(self.png_fns)
         logger.info(f'No. of Layouts: {len(self.json_fns)} ({data_dir})')
 
