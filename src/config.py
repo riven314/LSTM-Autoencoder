@@ -6,8 +6,8 @@ class Config:
     # under which there are "train", "val", "test" subfolders
     DATA_DIR = '/media/alex/Amazing/personal/Project/RICO_dataset/test_data'
 
-    OUTPUT_DIR = ''
-    EXPERIMENT_NAME = ''
+    OUTPUT_DIR = 'outputs'
+    EXPERIMENT_NAME = '00_prototype'
 
     RESIZE_FACTOR = 0.1
     WIDTH = 1440
@@ -16,16 +16,16 @@ class Config:
     INPUT_SIZE = 4
     HIDDEN_SIZE = 256
     NUM_LAYERS = 2
-    DROPOUT = 0.4
+    DROPOUT_P = 0.
     IS_LSTM_ORTHOGONAL_INIT = True
 
     BATCH_SIZE = 4
-    EPOCH_N = 10
-    SAVE_CYCLE = 3
-    VERBOSE_CYCLE = 1
+    EPOCH_N = 100
+    SAVE_CYCLE = 999999
+    VERBOSE_CYCLE = 100
     ENCODER_LR = 0.1
     ENCODER_GAMMA = 0.1
-    ENCODER_STEP_CYCLE = 5
+    ENCODER_STEP_CYCLE = 1000
     DECODER_LR = ENCODER_LR
     DECODER_GAMMA = ENCODER_GAMMA
     DECODER_STEP_CYCLE = ENCODER_STEP_CYCLE

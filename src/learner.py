@@ -2,8 +2,9 @@
 TO BE ADDED:
 1. IoU as metric
 2. save losses as csv + .png plot
-3. add a class to do arithmetic average
-4. try positional encoding 
+3. print out learning rate
+4. add a class to do arithmetic average
+5. try positional encoding 
 """
 import os
 import json
@@ -11,6 +12,7 @@ import time
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 import torch
@@ -98,26 +100,42 @@ class Learner:
         _path = os.path.join(self.output_dir, model_name)
         return _path
 
+    @property
+    def csv_path(self):
+        csv_name = f'report.csv'
+        return os.path.join(self.output_dir, csv_name)
+
     def train(self):
         logger.info('Start training...')
 
         self.net.to(self.device)
 
-        for epoch_i in self.epoch_n:
+        for epoch_i in range(self.epoch_n):
             self.crt_epoch = epoch_i + 1
             start_t = time.time()
 
-            self._train_one_epoch()
-            self._val_one_epoch()
+            epoch_min = self._train_one_epoch()
+            if self.crt_epoch % self.verbose_cycle == 0:
+                train_avg_rmse = self.train_losses[-1]
+                logger.info(f'{self.signature}:: Train complete. Avg RMSE: {train_avg_rmse:04f}. Time: {epoch_min:03f} mins')
 
-            epoch_mins = (time.time() - start_t) / 60.
-            logger.info(f'{self.signature}:: Completed Train + Val. Time: {epoch_mins} mins')
+            epoch_min = self._val_one_epoch()
+            if self.crt_epoch % self.verbose_cycle == 0:
+                val_avg_rmse = self.val_losses[-1]
+                logger.info(f'{self.signature}:: Val complete. Avg RMSE: {val_avg_rmse:04f}. Time: {epoch_min:03f} mins')
+
+            total_epoch_min = (time.time() - start_t) / 60.
+            if self.crt_epoch % self.verbose_cycle == 0:
+                logger.info(f'{self.signature}:: Completed Train + Val. Time: {total_epoch_min} mins')
             
-            if self.crt_epoch % self.save_cycle:
+            if self.crt_epoch % self.save_cycle == 0:
                 self.save_model()
                 logger.info(f'{self.signature}:: Model saved: {self.model_path}')
 
         logger.info(f'{self.signature}:: Training complete!')
+        self.save_model()
+        self.save_report()
+        logger.info(f'{self.signature}:: Final Model and Report saved: {self.model_path}, {self.csv_path}')
 
     def _train_one_epoch(self):
         self.net.train()
@@ -141,7 +159,7 @@ class Learner:
                 batch_first = True,
                 enforce_sorted = True
             )
-            loss = self.loss(preds, targets)
+            loss = self.loss(preds.data, targets.data)
             rmse = torch.sqrt(loss)
 
             rmse.backward()
@@ -150,14 +168,13 @@ class Learner:
             self.encoder_stepper.step()
             self.decoder_stepper.step()
 
-            report_rmse = rmse.clone().nump()
+            report_rmse = float(rmse.data.cpu().numpy())
             rmse_ls.append(report_rmse)
 
         epoch_min = (time.time() - start_t) / 60.
         avg_rmse = sum(rmse_ls) / len(rmse_ls)
-
-        if self.verbose_cycle:
-            logger.info(f'{self.signature}:: Train epoch complete. Avg RMSE: {avg_rmse}. Time: {epoch_min} mins')
+        self.train_losses.append(avg_rmse)
+        return epoch_min
 
     def _val_one_epoch(self):
         self.net.eval()
@@ -179,17 +196,16 @@ class Learner:
                     batch_first = True,
                     enforce_sorted = True
                 )
-                loss = self.loss(preds, targets)
+                loss = self.loss(preds.data, targets.data)
                 rmse = torch.sqrt(loss)
 
-                report_rmse = rmse.clone().nump()
+                report_rmse = float(rmse.data.cpu().numpy())
                 rmse_ls.append(report_rmse)
 
         epoch_min = (time.time() - start_t) / 60.
         avg_rmse = sum(rmse_ls) / len(rmse_ls)
-
-        if self.verbose_cycle:
-            logger.info(f'{self.signature}:: Eval epoch complete. Avg RMSE: {avg_rmse}. Time: {epoch_min} mins')
+        self.val_losses.append(avg_rmse)
+        return epoch_min
 
     def save_model(self):
         torch.save(self.net.state_dict(), self.model_path)
@@ -199,5 +215,9 @@ class Learner:
         self.net.load_state_dict(torch.load(ckpt_path))
         logger.info(f'Model loaded: {ckpt_path}')
 
-    def save_train_report(self):
-        raise NotImplementedError
+    def save_report(self):
+        losses_dicts = {
+            'train_losses': self.train_losses, 'val_losses': self.val_losses
+        }
+        df = pd.DataFrame(losses_dicts)
+        df.to_csv(self.csv_path, index = False)
