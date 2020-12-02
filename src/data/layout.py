@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw
 
-import src.config as config
+from src.config import Config as config
 from src.common.logger import get_logger
 from src.data.utils import read_json, resize_image_wrt_asp
 

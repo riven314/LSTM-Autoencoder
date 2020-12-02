@@ -8,7 +8,6 @@ import torch
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 
-import src.config as config
 from src.common.logger import get_logger
 from src.data.layout import Layout
 

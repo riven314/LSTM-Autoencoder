@@ -4,7 +4,7 @@ from copy import deepcopy
 import torch
 from torch.utils.data import DataLoader
 
-import src.config as config
+from src.config import Config as config
 from src.common.logger import get_logger
 from src.data.sampler import LayoutSampler, collate_pad_fn
 
