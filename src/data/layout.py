@@ -23,8 +23,14 @@ class Layout:
         
         self.json_tree = read_json(json_fn)
         classes, bboxs = self.parse_bboxs_from_json_tree()
-        self.gt_classes = list(classes)
-        self.gt_bboxs = np.array(bboxs, dtype = np.float32)
+
+        # as a tmp work-around on layout with empty bboxs
+        if len(bboxs) == 0:
+            self.gt_classes = 1
+            self.gt_bboxs = np.array([[0., 0., 0., 0.]], dtype = np.float32)
+        else:
+            self.gt_classes = list(classes)
+            self.gt_bboxs = np.array(bboxs, dtype = np.float32)
 
         self.pred_bboxs = None
     

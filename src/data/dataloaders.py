@@ -15,7 +15,8 @@ def get_dataloaders():
     default_dataloader_kwargs = {
         'batch_size': config.BATCH_SIZE,
         'collate_fn': collate_pad_fn,
-        'num_workers': 4, 'shuffle': False
+        'num_workers': config.NUM_WORKERS, 
+        'shuffle': False
     }
     
     dataloaders = []

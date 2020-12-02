@@ -130,6 +130,7 @@ class Learner:
             
             if self.crt_epoch % self.save_cycle == 0:
                 self.save_model()
+                self.save_report()
                 logger.info(f'{self.signature}:: Model saved: {self.model_path}')
 
         logger.info(f'{self.signature}:: Training complete!')
